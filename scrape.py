@@ -76,7 +76,7 @@ def main():
     total_errors = 0
 
     # Scrape and write to CSV
-    with open(output_file, mode='w', newline='', encoding='utf-8') as csvfile:
+    with open(output_file, mode='w', newline='', encoding='utf-8-sig') as csvfile:
         fieldnames = ['Ano', 'Distrito', 'Código Município', 'Município', 'Prédios Urbanos', 'Prédios Rústicos', 'Taxas por Freguesia', 'Dedução Fixa']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
