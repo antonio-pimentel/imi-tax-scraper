@@ -39,22 +39,29 @@ def fetch_imi_data(year, distrito_code):
     for row in rows:
         cols = row.find_all('td')
         if len(cols) >= 6:
-            data.append({
+            entry = {
                 'Ano': year,
                 'Distrito': distrito_code[2:].replace('+', ' '),
                 'Código Município': cols[0].text.strip(),
                 'Município': cols[1].text.strip(),
-                'Prédios Urbanos': cols[2].text.strip(),
-                'Prédios Rústicos': cols[3].text.strip(),
-                'Taxas por Freguesia': cols[4].text.strip(),
-                'Dedução Fixa': cols[5].text.strip(),
-            })
+            }
+            if year <= 2002: # [Código, Município, Urbanos, Rústicos, -, -]
+                entry['Prédios Urbanos'] = cols[2].text.strip()
+                entry['Prédios Urbanos Avaliados nos Termos do CIMI'] = ""
+                entry['Prédios Rústicos'] = cols[3].text.strip()
+            elif 2003 <= year <= 2011: # [Código, Município, Urbanos, Urbanos CIMI, Rústicos, -, -]
+                entry['Prédios Urbanos'] = cols[2].text.strip()
+                entry['Prédios Urbanos Avaliados nos Termos do CIMI'] = cols[3].text.strip()
+                entry['Prédios Rústicos'] = cols[4].text.strip()
+            else: # 2012+ [Código, Município, Urbanos CIMI, Rústicos, -, -]
+                entry['Prédios Urbanos'] = ""
+                entry['Prédios Urbanos Avaliados nos Termos do CIMI'] = cols[2].text.strip()
+                entry['Prédios Rústicos'] = cols[3].text.strip()
+            data.append(entry)
     return data
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Scrape IMI municipal tax data from Portal das Finanças."
-    )
+    parser = argparse.ArgumentParser(description="Scrape IMI data from Portal das Finanças.")
     parser.add_argument(
         "--output", "-o",
         default=default_output_file,
@@ -77,7 +84,8 @@ def main():
 
     # Scrape and write to CSV
     with open(output_file, mode='w', newline='', encoding='utf-8-sig') as csvfile:
-        fieldnames = ['Ano', 'Distrito', 'Código Município', 'Município', 'Prédios Urbanos', 'Prédios Rústicos', 'Taxas por Freguesia', 'Dedução Fixa']
+        fieldnames = ['Ano', 'Distrito', 'Código Município', 'Município', 'Prédios Urbanos', 'Prédios Urbanos Avaliados nos Termos do CIMI', 'Prédios Rústicos']
+
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
